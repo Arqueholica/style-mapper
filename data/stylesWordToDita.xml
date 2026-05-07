@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleMap>
+    <toHTML>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">h1</resultedHTML>
+            <styleName>Title</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">h2</resultedHTML>
+            <styleName>Subtitle</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">h1</resultedHTML>
+            <styleName>Heading</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">h1</resultedHTML>
+            <styleName>Heading 1</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">h2</resultedHTML>
+            <styleName>Heading 2</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">h3</resultedHTML>
+            <styleName>Heading 3</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">h4</resultedHTML>
+            <styleName>Heading 4</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">h5</resultedHTML>
+            <styleName>Heading 5</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">h6</resultedHTML>
+            <styleName>Heading 6</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">h6</resultedHTML>
+            <styleName>Heading 7</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">h6</resultedHTML>
+            <styleName>Heading 8</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">h6</resultedHTML>
+            <styleName>Heading 9</styleName>
+        </relation>
+        <relation>
+            <element>p.Title</element>
+            <resultedHTML fresh="true">h1</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p.Subtitle</element>
+            <resultedHTML fresh="true">h2</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p.Heading</element>
+            <resultedHTML fresh="true">h1</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p.Heading1</element>
+            <resultedHTML fresh="true">h1</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p.Heading2</element>
+            <resultedHTML fresh="true">h2</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p.Heading3</element>
+            <resultedHTML fresh="true">h3</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p.Heading4</element>
+            <resultedHTML fresh="true">h4</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p.Heading5</element>
+            <resultedHTML fresh="true">h5</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p.Heading6</element>
+            <resultedHTML fresh="true">h6</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p.Heading7</element>
+            <resultedHTML fresh="true">h6</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p.Heading8</element>
+            <resultedHTML fresh="true">h6</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p.Heading9</element>
+            <resultedHTML fresh="true">h6</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>b</element>
+            <resultedHTML fresh="false">strong</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>r</element>
+            <resultedHTML fresh="false">strong</resultedHTML>
+            <styleName>Strong</styleName>
+        </relation>
+        <relation>
+            <element>r.Strong</element>
+            <resultedHTML fresh="false">strong</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>i</element>
+            <resultedHTML fresh="false">em</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>r</element>
+            <resultedHTML fresh="false">em</resultedHTML>
+            <styleName>Subtle Emphasis</styleName>
+        </relation>
+        <relation>
+            <element>r</element>
+            <resultedHTML fresh="false">em</resultedHTML>
+            <styleName>Emphasis</styleName>
+        </relation>
+        <relation>
+            <element>r</element>
+            <resultedHTML fresh="false">em</resultedHTML>
+            <styleName>Intense Emphasis</styleName>
+        </relation>
+        <relation>
+            <element>r.SubtleEmphasis</element>
+            <resultedHTML fresh="false">em</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>r.Emphasis</element>
+            <resultedHTML fresh="false">em</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>r.IntenseEmphasis</element>
+            <resultedHTML fresh="false">em</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>u</element>
+            <resultedHTML fresh="false">u</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>strike</element>
+            <resultedHTML fresh="false">s</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>r</element>
+            <resultedHTML fresh="false">cite</resultedHTML>
+            <styleName>Subtle Reference</styleName>
+        </relation>
+        <relation>
+            <element>r</element>
+            <resultedHTML fresh="false">cite</resultedHTML>
+            <styleName>Intense Reference</styleName>
+        </relation>
+        <relation>
+            <element>r</element>
+            <resultedHTML fresh="false">cite</resultedHTML>
+            <styleName>Book Title</styleName>
+        </relation>
+        <relation>
+            <element>r.SubtleReference</element>
+            <resultedHTML fresh="false">cite</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>r.IntenseReference</element>
+            <resultedHTML fresh="false">cite</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>r.BookTitle</element>
+            <resultedHTML fresh="false">cite</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">blockquote</resultedHTML>
+            <styleName>Quote</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">blockquote</resultedHTML>
+            <styleName>Intense Quote</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">blockquote</resultedHTML>
+            <styleName>Block Text</styleName>
+        </relation>
+        <relation>
+            <element>p.Quote</element>
+            <resultedHTML fresh="true">blockquote</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p.IntenseQuote</element>
+            <resultedHTML fresh="true">blockquote</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p.BlockText</element>
+            <resultedHTML fresh="true">blockquote</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="false">pre:separator('\n')</resultedHTML>
+            <styleName>Code Block</styleName>
+        </relation>
+        <relation>
+            <element>table</element>
+            <resultedHTML fresh="true">table</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p:unordered-list(1)</element>
+            <resultedHTML fresh="true">ul &gt; li</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p:unordered-list(2)</element>
+            <resultedHTML fresh="true">ul|ol &gt; li &gt; ul &gt; li</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p:unordered-list(3)</element>
+            <resultedHTML fresh="true">ul|ol &gt; li &gt; ul|ol &gt; li &gt; ul &gt; li</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p:unordered-list(4)</element>
+            <resultedHTML fresh="true">ul|ol &gt; li &gt; ul|ol &gt; li &gt; ul|ol &gt; li &gt; ul &gt; li</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p:unordered-list(5)</element>
+            <resultedHTML fresh="true">ul|ol &gt; li &gt; ul|ol &gt; li &gt; ul|ol &gt; li &gt; ul|ol &gt; li &gt; ul &gt; li</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p:ordered-list(1)</element>
+            <resultedHTML fresh="true">ol &gt; li</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p:ordered-list(2)</element>
+            <resultedHTML fresh="true">ul|ol &gt; li &gt; ol &gt; li</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p:ordered-list(3)</element>
+            <resultedHTML fresh="true">ul|ol &gt; li &gt; ul|ol &gt; li &gt; ol &gt; li</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p:ordered-list(4)</element>
+            <resultedHTML fresh="true">ul|ol &gt; li &gt; ul|ol &gt; li &gt; ul|ol &gt; li &gt; ol &gt; li</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p:ordered-list(5)</element>
+            <resultedHTML fresh="true">ul|ol &gt; li &gt; ul|ol &gt; li &gt; ul|ol &gt; li &gt; ul|ol &gt; li &gt; ol &gt; li</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName>Body</styleName>
+        </relation>
+        <relation>
+            <element>p.Body</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName>Body Text</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName>Body Text 2</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName>Body Text 3</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName>Body Text First Indent</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName>Body Text First Indent 2</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName>Body Text Indent</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName>Body Text Indent 2</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName>Body Text Indent 3</styleName>
+        </relation>
+        <relation>
+            <element>r</element>
+            <resultedHTML fresh="false">abbr</resultedHTML>
+            <styleName>HTML Acronym</styleName>
+        </relation>
+        <relation>
+            <element>r</element>
+            <resultedHTML fresh="false">cite</resultedHTML>
+            <styleName>HTML Cite</styleName>
+        </relation>
+        <relation>
+            <element>r</element>
+            <resultedHTML fresh="false">code</resultedHTML>
+            <styleName>HTML Code</styleName>
+        </relation>
+        <relation>
+            <element>r</element>
+            <resultedHTML fresh="false">dfn</resultedHTML>
+            <styleName>HTML Definition</styleName>
+        </relation>
+        <relation>
+            <element>r</element>
+            <resultedHTML fresh="false">kbd</resultedHTML>
+            <styleName>HTML Keyboard</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">pre</resultedHTML>
+            <styleName>HTML Preformatted</styleName>
+        </relation>
+        <relation>
+            <element>r</element>
+            <resultedHTML fresh="false">samp</resultedHTML>
+            <styleName>HTML Sample</styleName>
+        </relation>
+        <relation>
+            <element>r</element>
+            <resultedHTML fresh="false">i</resultedHTML>
+            <styleName>HTML Typewriter</styleName>
+        </relation>
+        <relation>
+            <element>r</element>
+            <resultedHTML fresh="false">var</resultedHTML>
+            <styleName>HTML Variable</styleName>
+        </relation>
+        <relation>
+            <element>r.HTMLAcronym</element>
+            <resultedHTML fresh="false">abbr</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>r.HTMLCite</element>
+            <resultedHTML fresh="false">cite</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>r.HTMLCode</element>
+            <resultedHTML fresh="false">code</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>r.HTMLDefinition</element>
+            <resultedHTML fresh="false">dfn</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>r.HTMLKeyboard</element>
+            <resultedHTML fresh="false">kbd</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p.HTMLPreformatted</element>
+            <resultedHTML fresh="true">pre</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>r.HTMLSample</element>
+            <resultedHTML fresh="false">samp</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>r.HTMLTypewriter</element>
+            <resultedHTML fresh="false">i</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>r.HTMLVariable</element>
+            <resultedHTML fresh="false">var</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName>Note</styleName>
+        </relation>
+        <relation>
+            <element>p.Note</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName>List Note</styleName>
+        </relation>
+        <relation>
+            <element>p.ListNote</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName></styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">i</resultedHTML>
+            <styleName>Caption</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName>No Spacing</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName>List Paragraph</styleName>
+        </relation>
+        <relation>
+            <element>p</element>
+            <resultedHTML fresh="true">p</resultedHTML>
+            <styleName>Bibliography</styleName>
+        </relation>
+    </toHTML>
+    <customToDefault/>
+</styleMap>

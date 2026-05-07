@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+.venv/
+env/
+venv/
+
+# Base de datos local (no subir a GitHub)
+*.db
+
+# Archivos temporales de Streamlit
+.streamlit/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de documentos subidos durante pruebas
+*.docx
+!data/
