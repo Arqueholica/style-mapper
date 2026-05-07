@@ -75,6 +75,7 @@ def initialize_database():
         print(f"✅ Base de datos inicializada con {len(styles)} estilos de Oxygen.")
 
     conn.close()
+    load_seed_rules()
 
 
 # ──────────────────────────────────────────────
@@ -153,4 +154,46 @@ def delete_rule(rule_id):
         "UPDATE style_rules SET is_active = FALSE WHERE id = ?", (rule_id,)
     )
     conn.commit()
+    conn.close()
+
+
+# ──────────────────────────────────────────────
+# Reglas iniciales confirmadas con documentos reales
+# ──────────────────────────────────────────────
+
+SEED_RULES = [
+    # Confirmadas con 2 pares de documentos IFU (74 casos analizados)
+    # Estas reglas usan la heurística de heading — no se aplican ciegamente
+    ("Default",        "p", "Heading 1", 0.95, "seed_confirmed"),
+    ("paragraph",      "p", "Heading 1", 0.90, "seed_confirmed"),
+    ("Body Text",      "p", "Heading 1", 0.85, "seed_confirmed"),
+    # Estilos de tabla — mapeo razonable, pendiente de confirmar con más docs
+    ("Table Text",     "p", "Body Text", 0.70, "seed_suggested"),
+    ("Table Paragraph","p", "Body Text", 0.70, "seed_suggested"),
+    ("Table Header Text","p","Heading 2",0.65, "seed_suggested"),
+    # Estilo de carácter desconocido — pendiente de confirmar
+    ("eop",            "r", "Default Paragraph Font", 0.50, "seed_suggested"),
+]
+
+
+def load_seed_rules():
+    """
+    Carga las reglas iniciales en la base de datos.
+    Solo inserta las que no existen todavía (INSERT OR IGNORE).
+    Se llama una vez desde initialize_database().
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) as n FROM style_rules")
+    if cursor.fetchone()["n"] == 0:
+        for source_style, source_element, target_style, confidence, origin in SEED_RULES:
+            cursor.execute("""
+                INSERT OR IGNORE INTO style_rules
+                    (source_style, source_element, target_style,
+                     confidence, rule_origin, created_by)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (source_style, source_element, target_style,
+                  confidence, origin, "sistema"))
+        conn.commit()
+        print(f"✅ {len(SEED_RULES)} reglas iniciales cargadas.")
     conn.close()
