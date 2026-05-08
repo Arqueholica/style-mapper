@@ -162,17 +162,31 @@ def delete_rule(rule_id):
 # ──────────────────────────────────────────────
 
 SEED_RULES = [
-    # Confirmadas con 2 pares de documentos IFU (74 casos analizados)
-    # Estas reglas usan la heurística de heading — no se aplican ciegamente
-    ("Default",        "p", "Heading 1", 0.95, "seed_confirmed"),
-    ("paragraph",      "p", "Heading 1", 0.90, "seed_confirmed"),
-    ("Body Text",      "p", "Heading 1", 0.85, "seed_confirmed"),
-    # Estilos de tabla — mapeo razonable, pendiente de confirmar con más docs
-    ("Table Text",     "p", "Body Text", 0.70, "seed_suggested"),
-    ("Table Paragraph","p", "Body Text", 0.70, "seed_suggested"),
-    ("Table Header Text","p","Heading 2",0.65, "seed_suggested"),
-    # Estilo de carácter desconocido — pendiente de confirmar
-    ("eop",            "r", "Default Paragraph Font", 0.50, "seed_suggested"),
+    # ── Confirmadas con 12 pares de documentos (1,305 cambios analizados) ──
+    # Estilos desconocidos para Oxygen que mapean a Heading 1
+    # (la heurística is_likely_heading filtra cuáles párrafos aplican)
+    ("Default",             "p", "Heading 1", 0.95, "seed_confirmed"),
+    ("paragraph",           "p", "Heading 1", 0.90, "seed_confirmed"),
+    ("Body Text",           "p", "Heading 1", 0.85, "seed_confirmed"),
+    ("Title",               "p", "Heading 1", 0.80, "seed_confirmed"),
+
+    # Estilos que mapean a Heading 2
+    ("Heading 1 No Number", "p", "Heading 2", 0.85, "seed_confirmed"),
+    ("Table Caption",       "p", "Heading 2", 0.70, "seed_confirmed"),
+
+    # Heading 7 → Body Text (15 casos en Light-Structure doc)
+    ("Heading 7",           "p", "Body Text", 0.80, "seed_confirmed"),
+
+    # Estilos de tabla
+    ("Table Text",          "p", "Body Text", 0.75, "seed_suggested"),
+    ("Table Paragraph",     "p", "Body Text", 0.75, "seed_suggested"),
+    ("Table Header Text",   "p", "Heading 2", 0.70, "seed_suggested"),
+
+    # Estilos que se dejan como están (sin mapeo a Oxygen — se ignoran)
+    # annotation text, toc 2 — aparecen en preprocesados sin cambio
+
+    # Estilo de carácter
+    ("eop",                 "r", "Default Paragraph Font", 0.50, "seed_suggested"),
 ]
 
 
