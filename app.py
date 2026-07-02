@@ -160,6 +160,16 @@ if page == "🏠 Procesar documento":
         for p in display_rows
     ])
 
+    # El desplegable debe incluir siempre los valores actuales de cada fila,
+    # aunque no estén en la lista de estilos de Oxygen (p.ej. estilos
+    # personalizados sin mapeo). Si no se incluyen, Streamlit puede bloquear
+    # la edición de esa celda porque el valor actual no está en las opciones.
+    extra_values = set()
+    for p in display_rows:
+        extra_values.add(p["original_style"])
+        extra_values.add(p["suggested_style"])
+    dropdown_options = sorted(set(known_list) | extra_values)
+
     if not df.empty:
         edited_df = st.data_editor(
             df,
@@ -176,7 +186,7 @@ if page == "🏠 Procesar documento":
                 "Estilo final": st.column_config.SelectboxColumn(
                     "Estilo final ✏️",
                     width="medium",
-                    options=["(sin cambio)"] + known_list,
+                    options=["(sin cambio)"] + dropdown_options,
                     required=True,
                 ),
                 "Confianza": st.column_config.ProgressColumn(

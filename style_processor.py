@@ -7,6 +7,7 @@ from docx import Document
 from docx.enum.style import WD_STYLE_TYPE
 from docx.opc.exceptions import PackageNotFoundError
 from docx.oxml.ns import qn
+from docx.shared import Pt
 from docx.text.paragraph import Paragraph as DocxParagraph
 
 # ── Constantes ────────────────────────────────────────────────────────────────
@@ -380,6 +381,50 @@ def _make_result(idx, display, original_style,
 
 # ── Aplicar decisiones ────────────────────────────────────────────────────────
 
+def _get_or_create_paragraph_style(doc, style_name):
+    """
+    Devuelve el estilo de párrafo con ese nombre. Si el documento no lo tiene
+    definido, lo crea.
+
+    Esto es necesario porque Word solo guarda en el catálogo de estilos del
+    documento (styles.xml) los estilos que se han usado al menos una vez.
+    Documentos generados por otras herramientas (conversión desde HTML, CMS,
+    plantillas automatizadas) a menudo solo incluyen 'Normal' y ningún estilo
+    de Heading, aunque el nombre sea estándar de Word. Sin este parche, intentar
+    aplicar 'Heading 1' a un párrafo en ese documento fallaría con KeyError.
+    """
+    try:
+        style = doc.styles[style_name]
+        if style.type == WD_STYLE_TYPE.PARAGRAPH:
+            return style
+    except KeyError:
+        pass
+
+    new_style = doc.styles.add_style(style_name, WD_STYLE_TYPE.PARAGRAPH)
+    try:
+        new_style.base_style = doc.styles["Normal"]
+    except KeyError:
+        pass
+
+    # Formato razonable para que el estilo tenga sentido si se abre en Word
+    name_lower = style_name.lower()
+    if name_lower.startswith("heading "):
+        try:
+            level = int(style_name.split()[-1])
+        except ValueError:
+            level = 1
+        new_style.font.bold = True
+        new_style.font.size = Pt(max(11, 16 - level))
+        new_style.paragraph_format.keep_with_next = True
+    elif style_name == "Title":
+        new_style.font.bold = True
+        new_style.font.size = Pt(22)
+    elif style_name == "Quote":
+        new_style.font.italic = True
+
+    return new_style
+
+
 def apply_paragraph_decisions(input_path, output_path, decisions):
     """
     Aplica estilos finales párrafo a párrafo.
@@ -398,11 +443,10 @@ def apply_paragraph_decisions(input_path, output_path, decisions):
         if final_style in (original_style, "(sin cambio)") or idx >= len(paras):
             continue
         try:
-            target_style = doc.styles[final_style]
-            if target_style.type == WD_STYLE_TYPE.PARAGRAPH:
-                paras[idx].style = target_style
-                changes += 1
-        except KeyError:
+            target_style = _get_or_create_paragraph_style(doc, final_style)
+            paras[idx].style = target_style
+            changes += 1
+        except Exception:
             errors += 1
 
     doc.save(output_path)
