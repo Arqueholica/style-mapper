@@ -162,28 +162,41 @@ def delete_rule(rule_id):
 # ──────────────────────────────────────────────
 
 SEED_RULES = [
-    # ── Confirmadas con 12 pares de documentos (1,305 cambios analizados) ──
-    # Estilos desconocidos para Oxygen que mapean a Heading 1
-    # (la heurística is_likely_heading filtra cuáles párrafos aplican)
+    # ── Confirmadas con 25 pares de documentos (2,760 cambios analizados) ──
+
+    # Estilos desconocidos que mapean a Heading 1
+    # (is_likely_heading filtra: solo si el párrafo parece título de sección)
     ("Default",             "p", "Heading 1", 0.95, "seed_confirmed"),
     ("paragraph",           "p", "Heading 1", 0.90, "seed_confirmed"),
     ("Body Text",           "p", "Heading 1", 0.85, "seed_confirmed"),
     ("Title",               "p", "Heading 1", 0.80, "seed_confirmed"),
+    ("PARAGRAPH",           "p", "Heading 1", 0.75, "seed_confirmed"),
 
     # Estilos que mapean a Heading 2
     ("Heading 1 No Number", "p", "Heading 2", 0.85, "seed_confirmed"),
     ("Table Caption",       "p", "Heading 2", 0.70, "seed_confirmed"),
+    ("Heading 9",           "p", "Heading 2", 0.85, "seed_confirmed"),
 
-    # Heading 7 → Body Text (15 casos en Light-Structure doc)
+    # Heading 7/8 → Body Text (documentos Light-Structure y SSCP)
     ("Heading 7",           "p", "Body Text", 0.80, "seed_confirmed"),
+    ("Heading 8",           "p", "Body Text", 0.75, "seed_confirmed"),
 
-    # Estilos de tabla
-    ("Table Text",          "p", "Body Text", 0.75, "seed_suggested"),
-    ("Table Paragraph",     "p", "Body Text", 0.75, "seed_suggested"),
-    ("Table Header Text",   "p", "Heading 2", 0.70, "seed_suggested"),
+    # Estilos de tabla → Table Paragraph
+    # (la lógica de tabla en analyze_document cubre Normal→Table Paragraph)
+    ("Table Text",          "p", "Table Paragraph", 0.88, "seed_confirmed"),
+    ("Table Header 2",      "p", "Table Header",    0.85, "seed_confirmed"),
+    ("Table Header Text",   "p", "Table Header",    0.75, "seed_confirmed"),
+    ("Numbered List 1",     "p", "Table Paragraph", 0.75, "seed_confirmed"),
 
-    # Estilos que se dejan como están (sin mapeo a Oxygen — se ignoran)
-    # annotation text, toc 2 — aparecen en preprocesados sin cambio
+    # Estilos FrameMaker
+    ("pf0",                 "p", "Body Text", 0.80, "seed_confirmed"),
+    ("pf1",                 "p", "Body Text", 0.80, "seed_suggested"),
+
+    # Otros estilos personalizados
+    ("Style1",              "p", "Normal",    0.70, "seed_confirmed"),
+    ("Body Text 3 FDA",     "p", "Body Text", 0.80, "seed_suggested"),
+    ("Normal (Web)",        "p", "Normal",    0.85, "seed_confirmed"),
+    ("List Bullet 2",       "p", "List Paragraph", 0.75, "seed_suggested"),
 
     # Estilo de carácter
     ("eop",                 "r", "Default Paragraph Font", 0.50, "seed_suggested"),

@@ -14,7 +14,8 @@ from database import (
     get_known_styles, get_style_rule, initialize_database, save_style_rule,
 )
 from style_processor import (
-    analyze_document, apply_paragraph_decisions, STATUS_LABELS,
+    analyze_document, apply_paragraph_decisions,
+    count_table_body_paragraphs, STATUS_LABELS,
 )
 
 # ── Inicialización ────────────────────────────────────────────────────────────
@@ -71,11 +72,29 @@ if page == "🏠 Procesar documento":
 
     with st.spinner("Analizando párrafos…"):
         try:
+            from style_processor import count_table_body_paragraphs
+            table_info = count_table_body_paragraphs(tmp_path)
             paragraphs = analyze_document(tmp_path, rules_dict, known_names)
         except ValueError as e:
             st.error(str(e))
             os.unlink(tmp_path)
             st.stop()
+
+    # ── Toggle de conversión de tablas ───────────────────────────────
+    apply_table = False
+    if table_info["normal_in_table"] > 0:
+        n_tbl = table_info["normal_in_table"]
+        hint  = " ✅ Recomendado" if table_info["suggest_conversion"] else ""
+        apply_table = st.toggle(
+            f"Convertir {n_tbl} párrafo(s) de cuerpo en tablas → Table Paragraph{hint}",
+            value=table_info["suggest_conversion"],
+            help="Activa esta opción si el documento es un formulario SSCP, FMR/SSP "
+                 "u otro documento con tablas densas de contenido."
+        )
+        if apply_table:
+            with st.spinner("Re-analizando con contexto de tabla…"):
+                paragraphs = analyze_document(tmp_path, rules_dict, known_names,
+                                              apply_table_context=True)
 
     # ── Resumen ───────────────────────────────────────────────────────────────
     total    = len(paragraphs)
