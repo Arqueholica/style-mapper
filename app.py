@@ -14,8 +14,8 @@ from database import (
     get_known_styles, get_style_rule, initialize_database, save_style_rule,
 )
 from style_processor import (
-    analyze_document, apply_paragraph_decisions,
-    count_table_body_paragraphs, STATUS_LABELS,
+    analyze_document, apply_paragraph_decisions, normalize_document_file,
+    count_table_body_paragraphs, check_heading_hierarchy, STATUS_LABELS,
 )
 
 # ── Inicialización ────────────────────────────────────────────────────────────
@@ -53,9 +53,36 @@ if page == "🏠 Procesar documento":
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
         tmp.write(uploaded.read())
-        tmp_path = tmp.name
+        raw_path = tmp.name
 
     st.success(f"✅ **{uploaded.name}** cargado correctamente.")
+
+    # ── Normalización de idioma ───────────────────────────────────────────────
+    # Word en español (u otros idiomas) traduce el NOMBRE VISIBLE de los
+    # estilos estándar (ej. "Título 1" en vez de "Heading 1"), aunque su
+    # identificador interno se mantenga en inglés. Se normaliza antes de
+    # analizar para que las reglas y OxygenAuthor los reconozcan.
+    normalized_path = raw_path.replace(".docx", "_NORM.docx")
+    renamed_styles = normalize_document_file(raw_path, normalized_path)
+    tmp_path = normalized_path
+    try:
+        os.unlink(raw_path)
+    except OSError:
+        pass
+
+    if renamed_styles:
+        with st.expander(
+            f"🌐 Se normalizaron {len(renamed_styles)} nombre(s) de estilo "
+            f"(documento en otro idioma)",
+            expanded=True,
+        ):
+            st.caption(
+                "Estos estilos tenían el nombre traducido en Word (p. ej. "
+                "español) pero corresponden a estilos estándar. Se renombraron "
+                "al nombre en inglés que reconoce OxygenAuthor."
+            )
+            for old_name, new_name, style_id in renamed_styles:
+                st.write(f"• `{old_name}` → **{new_name}**")
 
     # ── Paso 2: analizar ──────────────────────────────────────────────────────
     st.header("Paso 2 · Revisión de estilos")
@@ -95,6 +122,27 @@ if page == "🏠 Procesar documento":
             with st.spinner("Re-analizando con contexto de tabla…"):
                 paragraphs = analyze_document(tmp_path, rules_dict, known_names,
                                               apply_table_context=True)
+
+    # ── Validación de jerarquía de headings ──────────────────────────
+    # Informativo: detecta saltos de nivel en la estructura de headings
+    # sugerida (p.ej. Heading 3 justo después de Heading 1). No bloquea
+    # el flujo — el usuario decide si es intencionado o hay que corregirlo.
+    hierarchy_issues = check_heading_hierarchy(paragraphs)
+    if hierarchy_issues:
+        with st.expander(
+            f"⚠️ {len(hierarchy_issues)} posible(s) salto(s) de jerarquía en headings",
+            expanded=False,
+        ):
+            st.caption(
+                "Un salto de nivel (p.ej. Heading 3 justo después de Heading 1, sin "
+                "pasar por Heading 2) puede generar una estructura de topics/subtopics "
+                "incorrecta al convertir a DITA. Revisa si es intencionado."
+            )
+            for issue in hierarchy_issues:
+                st.write(
+                    f"• Nivel {issue['from_level']} → **Nivel {issue['to_level']}** "
+                    f"— *{issue['text'][:70]}*"
+                )
 
     # ── Resumen ───────────────────────────────────────────────────────────────
     total    = len(paragraphs)

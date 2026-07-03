@@ -3,6 +3,8 @@ style_processor.py
 Heurísticas validadas con 25 pares de documentos reales (2,760 cambios).
 """
 
+import re
+
 from docx import Document
 from docx.enum.style import WD_STYLE_TYPE
 from docx.opc.exceptions import PackageNotFoundError
@@ -91,19 +93,32 @@ def is_in_table(para) -> bool:
 
 # ── Detección de headings ─────────────────────────────────────────────────────
 
+# Documentos tipo FAQ usan preguntas completas en negrita como Heading 1.
+# Estas suelen ser más largas que los títulos cortos tipo "WARNINGS".
+HEADING_MAX_WORDS_QUESTION = 15
+
 def is_likely_heading(para) -> tuple:
     """
     Evalúa si un párrafo parece un Heading 1 (título de sección / topic boundary).
-    Criterio: ≤ 7 palabras, bold y/o mayúsculas.
+    Criterio base: ≤ 7 palabras, bold y/o mayúsculas.
+    Criterio adicional para FAQ: preguntas en negrita (termina en "?"),
+    con límite más amplio de hasta 15 palabras — validado con documentos
+    IFP tipo Zimmer donde los headings son preguntas completas.
     """
     text = para.text.strip()
     if not text:
         return False, 0.0, "párrafo vacío"
-    wc = _word_count(para)
+
+    wc   = _word_count(para)
+    bold = _is_bold(para)
+
+    # Caso especial: pregunta completa en negrita (formato FAQ)
+    if bold and text.endswith("?") and wc <= HEADING_MAX_WORDS_QUESTION:
+        return True, HEADING_CONFIDENCE_HIGH, "negrita + pregunta (formato FAQ)"
+
     if wc > HEADING_MAX_WORDS or len(text) > HEADING_MAX_CHARS:
         return False, 0.0, f"demasiado largo ({wc} palabras)"
 
-    bold  = _is_bold(para)
     upper = text.isupper()
     title = text.istitle()
 
@@ -203,6 +218,173 @@ def _get_all_paras(doc):
 
 
 # ── Análisis principal ────────────────────────────────────────────────────────
+
+# ── Coincidencia por similitud de nombre (closest match) ──────────────────────
+# Inspirado en el algoritmo equivalente de DocStyler (Java): cuando un estilo
+# no tiene regla guardada ni heurística aplicable, se busca el estilo aprobado
+# más parecido por nombre, combinando contención de subcadena y solapamiento
+# de palabras. Es un apoyo adicional — nunca sustituye a una regla confirmada
+# con datos reales, y siempre queda en estado "revisar", nunca automático.
+
+def _normalize_style_name(name: str) -> str:
+    return re.sub(r"[\s_-]+", "", name.lower())
+
+
+def _split_style_words(name: str) -> set:
+    parts = re.split(r"[\s_-]+", name)
+    return {p.lower() for p in parts if p}
+
+
+def find_closest_style(style_name: str, known_style_names, min_score: float = 0.3):
+    """
+    Busca el estilo aprobado (de Oxygen) más parecido a un nombre desconocido.
+
+    Devuelve (estilo_sugerido_o_None, score_0_a_1, motivo_string).
+    """
+    normalized    = _normalize_style_name(style_name)
+    source_words  = _split_style_words(style_name)
+
+    best_match = None
+    best_score = 0.0
+
+    for approved in known_style_names:
+        approved_norm = _normalize_style_name(approved)
+
+        # Coincidencia exacta salvo mayúsculas/espacios — muy alta confianza
+        if normalized == approved_norm:
+            return approved, 0.95, "coincide salvo mayúsculas/espacios"
+
+        score = 0.0
+        if normalized in approved_norm or approved_norm in normalized:
+            score = min(len(normalized), len(approved_norm)) / max(len(normalized), len(approved_norm))
+
+        approved_words = _split_style_words(approved)
+        overlap = source_words & approved_words
+        if overlap:
+            word_score = len(overlap) / max(len(source_words), len(approved_words))
+            score = max(score, word_score)
+
+        if score > best_score:
+            best_score = score
+            best_match = approved
+
+    if best_match and best_score >= min_score:
+        return best_match, best_score, "similitud de nombre"
+    return None, 0.0, "sin coincidencia razonable"
+
+
+# ── Validación de jerarquía de headings ───────────────────────────────────────
+# Detecta saltos de nivel (p.ej. Heading 3 justo después de Heading 1, sin
+# pasar por Heading 2), que generan una estructura de topics/subtopics
+# incorrecta al convertir a DITA. Es informativo — no modifica nada.
+
+HEADING_LEVEL_MAP = {
+    "title": 1, "heading 1": 1,
+    "subtitle": 2, "heading 2": 2,
+    "heading 3": 3, "heading 4": 4, "heading 5": 5,
+    "heading 6": 6, "heading 7": 7, "heading 8": 8, "heading 9": 9,
+}
+
+
+def check_heading_hierarchy(paragraphs) -> list:
+    """
+    Revisa la secuencia de estilos sugeridos (analyze_document) y detecta
+    saltos de nivel en la jerarquía de headings.
+
+    paragraphs: lista de dicts con al menos 'idx', 'text', 'suggested_style'
+
+    Devuelve una lista de dicts: {idx, text, from_level, to_level, message}
+    """
+    issues = []
+    prev_level = 0
+
+    for p in paragraphs:
+        level = HEADING_LEVEL_MAP.get(p["suggested_style"].lower())
+        if level is None:
+            continue
+
+        if prev_level > 0 and level > prev_level + 1:
+            issues.append({
+                "idx": p["idx"],
+                "text": p["text"],
+                "from_level": prev_level,
+                "to_level": level,
+                "message": (
+                    f"'{p['suggested_style']}' aparece justo después de un "
+                    f"heading de nivel {prev_level} — se esperaba nivel "
+                    f"{prev_level + 1} antes de nivel {level}"
+                ),
+            })
+        prev_level = level
+
+    return issues
+
+
+# ── Normalización de nombres de estilo por idioma ─────────────────────────────
+# Word guarda dos identificadores distintos por estilo:
+#   · style_id  → invariante, siempre en inglés (ej. "Heading1")
+#   · name      → nombre visible, SÍ se traduce según el idioma de la
+#                 interfaz de Word (ej. "Título 1" en español)
+#
+# Nuestras reglas, heurísticas y el XML de OxygenAuthor comparan por NOMBRE
+# VISIBLE. Un documento creado o editado en Word en español puede tener sus
+# estilos estándar con nombre en español, lo que los hace irreconocibles
+# aunque conceptualmente sean los mismos estilos. Esta función los detecta
+# por su style_id (invariante) y renombra la definición al nombre canónico
+# en inglés, para que tanto Style Mapper como OxygenAuthor los reconozcan.
+STANDARD_STYLE_ID_TO_ENGLISH_NAME = {
+    "Normal": "Normal",
+    "Heading1": "Heading 1", "Heading2": "Heading 2", "Heading3": "Heading 3",
+    "Heading4": "Heading 4", "Heading5": "Heading 5", "Heading6": "Heading 6",
+    "Heading7": "Heading 7", "Heading8": "Heading 8", "Heading9": "Heading 9",
+    "Title": "Title", "Subtitle": "Subtitle",
+    "BodyText": "Body Text", "BodyText2": "Body Text 2", "BodyText3": "Body Text 3",
+    "BodyTextIndent": "Body Text Indent",
+    "Quote": "Quote", "IntenseQuote": "Intense Quote",
+    "Caption": "Caption",
+    "ListParagraph": "List Paragraph",
+    "NoSpacing": "No Spacing",
+}
+
+
+def normalize_localized_style_names(doc) -> list:
+    """
+    Renombra las definiciones de estilo cuyo style_id coincide con un estilo
+    estándar de Word pero cuyo nombre visible está en otro idioma.
+
+    Debe ejecutarse UNA VEZ al abrir el documento, antes de analizar o
+    aplicar cualquier cambio — tanto analyze_document como
+    apply_paragraph_decisions dependen de que ya se haya normalizado.
+
+    Devuelve una lista de tuplas (nombre_original, nombre_nuevo, style_id)
+    con los renombrados realizados, para poder informar al usuario.
+    """
+    renamed = []
+    for style in doc.styles:
+        if style.type != WD_STYLE_TYPE.PARAGRAPH:
+            continue
+        canonical = STANDARD_STYLE_ID_TO_ENGLISH_NAME.get(style.style_id)
+        if canonical and style.name != canonical:
+            old_name = style.name
+            try:
+                style.name = canonical
+                renamed.append((old_name, canonical, style.style_id))
+            except Exception:
+                pass  # Si no se puede renombrar, se deja como está
+    return renamed
+
+
+def normalize_document_file(input_path, output_path) -> list:
+    """
+    Abre un .docx, normaliza los nombres de estilo localizados y lo guarda
+    en output_path. Devuelve la lista de renombrados realizados.
+    Si no hay nada que renombrar, el archivo de salida es una copia idéntica.
+    """
+    doc = Document(input_path)
+    renamed = normalize_localized_style_names(doc)
+    doc.save(output_path)
+    return renamed
+
 
 def analyze_document(file_path, rules_dict, known_style_names, apply_table_context=False):
     """
@@ -353,7 +535,19 @@ def analyze_document(file_path, rules_dict, known_style_names, apply_table_conte
             ))
             continue
 
-        # ── 7. Sin mapeo ──────────────────────────────────────────────
+        # ── 7. Sin regla — intentar coincidencia por similitud de nombre ──
+        match, score, reason = find_closest_style(style_name, known_style_names)
+        if match:
+            results.append(_make_result(
+                i, display, style_name,
+                suggested=match,
+                confidence=score,
+                status="review",
+                note=f"sugerencia por similitud de nombre ({reason})",
+            ))
+            continue
+
+        # ── 8. Sin mapeo ──────────────────────────────────────────────
         results.append(_make_result(
             i, display, style_name,
             suggested=style_name,
