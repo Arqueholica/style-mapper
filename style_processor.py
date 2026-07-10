@@ -575,6 +575,12 @@ def _make_result(idx, display, original_style,
 
 # ── Aplicar decisiones ────────────────────────────────────────────────────────
 
+# Nombres que corresponden a auténticos estilos "built-in" de Word (no
+# inventados por nosotros). Se usan para decidir si al crear un estilo
+# ausente hay que marcarlo como builtin=True — ver _get_or_create_paragraph_style.
+GENUINE_BUILTIN_STYLE_NAMES = set(STANDARD_STYLE_ID_TO_ENGLISH_NAME.values())
+
+
 def _get_or_create_paragraph_style(doc, style_name):
     """
     Devuelve el estilo de párrafo con ese nombre. Si el documento no lo tiene
@@ -586,6 +592,15 @@ def _get_or_create_paragraph_style(doc, style_name):
     plantillas automatizadas) a menudo solo incluyen 'Normal' y ningún estilo
     de Heading, aunque el nombre sea estándar de Word. Sin este parche, intentar
     aplicar 'Heading 1' a un párrafo en ese documento fallaría con KeyError.
+
+    IMPORTANTE — bug corregido: al crear un estilo con nombre/ID estándar de
+    Word (ej. "Heading 1"), hay que pasar builtin=True a add_style(). Sin
+    esto, python-docx marca el estilo con el atributo w:customStyle="1" en el
+    XML. Word, al abrir el archivo, ve una contradicción (un styleId/nombre
+    que dice ser el built-in estándar, pero marcado como personalizado) y la
+    resuelve creando SU PROPIA versión genuina del estilo y renombrando la
+    nuestra para desambiguar — por eso aparecía como "Heading 11" en el panel
+    de Estilos de Word en lugar de "Heading 1".
     """
     try:
         style = doc.styles[style_name]
@@ -594,7 +609,10 @@ def _get_or_create_paragraph_style(doc, style_name):
     except KeyError:
         pass
 
-    new_style = doc.styles.add_style(style_name, WD_STYLE_TYPE.PARAGRAPH)
+    is_genuine_builtin = style_name in GENUINE_BUILTIN_STYLE_NAMES
+    new_style = doc.styles.add_style(
+        style_name, WD_STYLE_TYPE.PARAGRAPH, builtin=is_genuine_builtin
+    )
     try:
         new_style.base_style = doc.styles["Normal"]
     except KeyError:
@@ -610,6 +628,16 @@ def _get_or_create_paragraph_style(doc, style_name):
         new_style.font.bold = True
         new_style.font.size = Pt(max(11, 16 - level))
         new_style.paragraph_format.keep_with_next = True
+        try:
+            new_style.paragraph_format.outline_level = level - 1
+        except Exception:
+            pass
+        if is_genuine_builtin:
+            try:
+                new_style.quick_style = True
+                new_style.next_paragraph_style = doc.styles["Normal"]
+            except Exception:
+                pass
     elif style_name == "Title":
         new_style.font.bold = True
         new_style.font.size = Pt(22)

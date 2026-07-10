@@ -226,6 +226,11 @@ if page == "🏠 Procesar documento":
         extra_values.add(p["suggested_style"])
     dropdown_options = sorted(set(known_list) | extra_values)
 
+    st.caption(
+        "💡 La columna **'Estilo final ✏️'** es un desplegable — haz clic en "
+        "cualquier celda para ver las opciones y elegir un estilo distinto."
+    )
+
     if not df.empty:
         edited_df = st.data_editor(
             df,
@@ -244,6 +249,7 @@ if page == "🏠 Procesar documento":
                     width="medium",
                     options=["(sin cambio)"] + dropdown_options,
                     required=True,
+                    help="Haz clic para abrir el desplegable y elegir el estilo correcto.",
                 ),
                 "Confianza": st.column_config.ProgressColumn(
                     "Confianza", width="small",
@@ -329,6 +335,13 @@ if page == "🏠 Procesar documento":
         if n_errors:
             msg += f" ({n_errors} errores — estilos no encontrados en el documento.)"
         st.success(msg)
+        st.caption(
+            "ℹ️ El cambio es de **estilo** (lo que necesita OxygenAuthor), no "
+            "necesariamente de aspecto visual. Si el texto ya estaba en negrita "
+            "antes del cambio, puede verse igual en Word — para comprobarlo, "
+            "haz clic en el párrafo y mira qué estilo aparece resaltado en el "
+            "panel de Estilos."
+        )
 
         st.download_button(
             label="⬇️ Descargar documento procesado",
