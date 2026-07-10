@@ -52,7 +52,15 @@ if page == "🏠 Procesar documento":
         st.stop()
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
-        tmp.write(uploaded.read())
+        # IMPORTANTE: usar getvalue(), NO read(). Streamlit re-ejecuta TODO
+        # el script en cada interacción (toggle, edición de tabla, clic en
+        # botón). El objeto 'uploaded' es el MISMO en cada re-ejecución, y
+        # .read() agota el buffer la primera vez — las siguientes veces
+        # devolvería bytes vacíos, corrompiendo silenciosamente el archivo
+        # que se procesa al pulsar "Procesar y descargar documento".
+        # .getvalue() no mueve el puntero de lectura, así que es seguro
+        # llamarlo en cada re-ejecución sin perder el contenido.
+        tmp.write(uploaded.getvalue())
         raw_path = tmp.name
 
     st.success(f"✅ **{uploaded.name}** cargado correctamente.")
