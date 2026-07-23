@@ -55,12 +55,7 @@ TOLERATED_STYLES = {
     "pf0", "pf1",       # FrameMaker — se dejan si no se detectan como heading
 }
 
-STATUS_LABELS = {
-    "no_change": "✅ Sin cambio",
-    "auto":      "🔵 Automático",
-    "review":    "🟡 Revisar",
-    "unknown":   "⚠️ Sin mapeo",
-}
+STATUS_CODES = {"no_change", "auto", "review", "unknown"}  # etiquetas traducidas en app.py/i18n.py
 
 
 # ── Detección de negrita ──────────────────────────────────────────────────────
@@ -107,31 +102,31 @@ def is_likely_heading(para) -> tuple:
     """
     text = para.text.strip()
     if not text:
-        return False, 0.0, "párrafo vacío"
+        return False, 0.0, "empty"
 
     wc   = _word_count(para)
     bold = _is_bold(para)
 
     # Caso especial: pregunta completa en negrita (formato FAQ)
     if bold and text.endswith("?") and wc <= HEADING_MAX_WORDS_QUESTION:
-        return True, HEADING_CONFIDENCE_HIGH, "negrita + pregunta (formato FAQ)"
+        return True, HEADING_CONFIDENCE_HIGH, "bold_question_faq"
 
     if wc > HEADING_MAX_WORDS or len(text) > HEADING_MAX_CHARS:
-        return False, 0.0, f"demasiado largo ({wc} palabras)"
+        return False, 0.0, f"too_long|{wc}"
 
     upper = text.isupper()
     title = text.istitle()
 
     if bold and (upper or wc <= 3):
-        return True, HEADING_CONFIDENCE_HIGH, "negrita + mayúsculas/corto"
+        return True, HEADING_CONFIDENCE_HIGH, "bold_caps_short"
     if bold and title:
-        return True, HEADING_CONFIDENCE_MED, "negrita + capitalizado"
+        return True, HEADING_CONFIDENCE_MED, "bold_titlecase"
     if bold:
-        return True, HEADING_CONFIDENCE_MED, "negrita"
+        return True, HEADING_CONFIDENCE_MED, "bold"
     if upper and wc <= 5:
-        return True, HEADING_CONFIDENCE_LOW, "mayúsculas (sin negrita)"
+        return True, HEADING_CONFIDENCE_LOW, "caps_no_bold"
 
-    return False, 0.0, "no cumple criterios de heading"
+    return False, 0.0, "not_heading_like"
 
 
 def is_likely_subheading(para) -> tuple:
@@ -142,19 +137,19 @@ def is_likely_subheading(para) -> tuple:
     """
     text = para.text.strip()
     if not text:
-        return False, 0.0, "párrafo vacío"
+        return False, 0.0, "empty"
 
     bold = _is_bold(para)
     if not bold:
-        return False, 0.0, "sin negrita explícita"
+        return False, 0.0, "no_explicit_bold"
 
     wc = _word_count(para)
     if wc > HEADING_MAX_WORDS_H2:
-        return False, 0.0, f"demasiado largo para sub-heading ({wc} palabras)"
+        return False, 0.0, f"too_long_subheading|{wc}"
 
     if wc <= 7:
-        return True, HEADING_CONFIDENCE_HIGH, f"negrita ({wc} palabras)"
-    return True, HEADING_CONFIDENCE_MED, f"negrita (largo: {wc} palabras)"
+        return True, HEADING_CONFIDENCE_HIGH, f"bold_short_words|{wc}"
+    return True, HEADING_CONFIDENCE_MED, f"bold_long_words|{wc}"
 
 
 def is_misapplied_heading(para) -> tuple:
@@ -167,13 +162,13 @@ def is_misapplied_heading(para) -> tuple:
     empty = not text
 
     if bold:
-        return False, 0.0, "tiene negrita — heading correcto"
+        return False, 0.0, "has_bold_correct_heading"
     if empty:
-        return True, 0.85, "heading vacío sin negrita"
+        return True, 0.85, "empty_heading_no_bold"
     wc = _word_count(para)
     if wc > 10:
-        return True, 0.90, f"heading sin negrita y largo ({wc} palabras)"
-    return True, 0.65, f"heading sin negrita ({wc} palabras)"
+        return True, 0.90, f"heading_no_bold_long|{wc}"
+    return True, 0.65, f"heading_no_bold_short|{wc}"
 
 
 # ── Traversal ─────────────────────────────────────────────────────────────────
@@ -252,7 +247,7 @@ def find_closest_style(style_name: str, known_style_names, min_score: float = 0.
 
         # Coincidencia exacta salvo mayúsculas/espacios — muy alta confianza
         if normalized == approved_norm:
-            return approved, 0.95, "coincide salvo mayúsculas/espacios"
+            return approved, 0.95, "exact_match_case"
 
         score = 0.0
         if normalized in approved_norm or approved_norm in normalized:
@@ -269,8 +264,8 @@ def find_closest_style(style_name: str, known_style_names, min_score: float = 0.
             best_match = approved
 
     if best_match and best_score >= min_score:
-        return best_match, best_score, "similitud de nombre"
-    return None, 0.0, "sin coincidencia razonable"
+        return best_match, best_score, "name_similarity"
+    return None, 0.0, "no_reasonable_match"
 
 
 # ── Validación de jerarquía de headings ───────────────────────────────────────
@@ -309,11 +304,7 @@ def check_heading_hierarchy(paragraphs) -> list:
                 "text": p["text"],
                 "from_level": prev_level,
                 "to_level": level,
-                "message": (
-                    f"'{p['suggested_style']}' aparece justo después de un "
-                    f"heading de nivel {prev_level} — se esperaba nivel "
-                    f"{prev_level + 1} antes de nivel {level}"
-                ),
+                "style_name": p["suggested_style"],
             })
         prev_level = level
 
@@ -437,7 +428,7 @@ def analyze_document(file_path, rules_dict, known_style_names, apply_table_conte
                 suggested="Table Paragraph",
                 confidence=confidence,
                 status="review",
-                note=f"en tabla, estilo '{style_name}' → Table Paragraph",
+                note=f"table_context|{style_name}",
             ))
             continue
 
@@ -543,7 +534,7 @@ def analyze_document(file_path, rules_dict, known_style_names, apply_table_conte
                 suggested=match,
                 confidence=score,
                 status="review",
-                note=f"sugerencia por similitud de nombre ({reason})",
+                note=reason,
             ))
             continue
 
@@ -568,7 +559,6 @@ def _make_result(idx, display, original_style,
         "final_style":     suggested,
         "confidence_pct":  round(confidence * 100),
         "status":          status,
-        "status_label":    STATUS_LABELS[status],
         "note":            note,
     }
 

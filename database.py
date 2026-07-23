@@ -4,11 +4,23 @@ Gestiona la base de datos SQLite del proyecto.
 Contiene dos tablas:
   - known_styles  : estilos reconocidos por OxygenAuthor (se carga del XML)
   - style_rules   : reglas de mapeo aprendidas por el equipo
+
+Persistencia entre redeploys de Render (plan gratuito, sin disco
+persistente): las reglas se respaldan en un Gist de GitHub mediante
+github_sync.py. Al arrancar, se restauran desde ahí si está configurado;
+cada vez que se guarda o elimina una regla, se vuelve a subir el conjunto
+completo. Si no está configurado, todo funciona igual pero sin persistencia
+entre redespliegues — ver github_sync.py para las variables de entorno.
 """
 
 import sqlite3
 import os
 from xml_parser import parse_oxygen_styles
+
+try:
+    import github_sync
+except ImportError:
+    github_sync = None
 
 DB_PATH = "style_mapper.db"
 
@@ -75,6 +87,7 @@ def initialize_database():
         print(f"✅ Base de datos inicializada con {len(styles)} estilos de Oxygen.")
 
     conn.close()
+    restore_rules_from_github()
     load_seed_rules()
 
 
@@ -133,6 +146,7 @@ def save_style_rule(source_style, source_element, target_style,
     """, (source_style, source_element, target_style, origin, created_by))
     conn.commit()
     conn.close()
+    _sync_rules_to_github()
 
 
 def get_all_rules():
@@ -155,6 +169,7 @@ def delete_rule(rule_id):
     )
     conn.commit()
     conn.close()
+    _sync_rules_to_github()
 
 
 # ──────────────────────────────────────────────
@@ -203,24 +218,75 @@ SEED_RULES = [
 ]
 
 
+def restore_rules_from_github():
+    """
+    Restaura las reglas guardadas en el Gist de respaldo (si está
+    configurado). Se llama una vez al arrancar, antes de cargar las
+    reglas semilla, para que las reglas del equipo persistan entre
+    redespliegues de Render.
+    """
+    if github_sync is None or not github_sync.is_configured():
+        return
+
+    remote_rules = github_sync.fetch_rules_from_gist()
+    if not remote_rules:
+        return
+
+    conn = get_connection()
+    for r in remote_rules:
+        try:
+            conn.execute("""
+                INSERT INTO style_rules
+                    (source_style, source_element, target_style, confidence,
+                     rule_origin, created_by, created_at, times_applied, is_active)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(source_style, source_element) DO UPDATE SET
+                    target_style  = excluded.target_style,
+                    confidence    = excluded.confidence,
+                    rule_origin   = excluded.rule_origin,
+                    times_applied = excluded.times_applied,
+                    is_active     = excluded.is_active
+            """, (
+                r.get("source_style"), r.get("source_element"), r.get("target_style"),
+                r.get("confidence", 1.0), r.get("rule_origin", "human"),
+                r.get("created_by", "usuario"), r.get("created_at"),
+                r.get("times_applied", 0), r.get("is_active", True),
+            ))
+        except Exception as e:
+            print(f"⚠️  Regla del respaldo omitida por error: {e}")
+    conn.commit()
+    conn.close()
+    print(f"✅ {len(remote_rules)} reglas restauradas desde el respaldo de GitHub.")
+
+
+def _sync_rules_to_github():
+    """
+    Sube el conjunto completo de reglas activas al Gist de respaldo.
+    Se llama tras cada guardado o borrado. Falla en silencio si no está
+    configurado — nunca bloquea la operación local.
+    """
+    if github_sync is None or not github_sync.is_configured():
+        return
+    github_sync.push_rules_to_gist(get_all_rules())
+
+
 def load_seed_rules():
     """
-    Carga las reglas iniciales en la base de datos.
-    Solo inserta las que no existen todavía (INSERT OR IGNORE).
-    Se llama una vez desde initialize_database().
+    Carga las reglas iniciales en la base de datos con INSERT OR IGNORE,
+    por lo que es seguro llamarla siempre (no duplica ni sobrescribe
+    reglas ya existentes, vengan del uso del equipo o restauradas desde
+    GitHub). Esto garantiza que cualquier regla semilla nueva añadida en
+    el código se incorpore aunque el respaldo de GitHub ya tenga datos.
     """
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) as n FROM style_rules")
-    if cursor.fetchone()["n"] == 0:
-        for source_style, source_element, target_style, confidence, origin in SEED_RULES:
-            cursor.execute("""
-                INSERT OR IGNORE INTO style_rules
-                    (source_style, source_element, target_style,
-                     confidence, rule_origin, created_by)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (source_style, source_element, target_style,
-                  confidence, origin, "sistema"))
-        conn.commit()
-        print(f"✅ {len(SEED_RULES)} reglas iniciales cargadas.")
+    for source_style, source_element, target_style, confidence, origin in SEED_RULES:
+        cursor.execute("""
+            INSERT OR IGNORE INTO style_rules
+                (source_style, source_element, target_style,
+                 confidence, rule_origin, created_by)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (source_style, source_element, target_style,
+              confidence, origin, "sistema"))
+    conn.commit()
     conn.close()
