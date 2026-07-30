@@ -77,14 +77,17 @@ with main_col:
         st.header(i18n.t("step1_header"))
         st.caption(i18n.t("step1_caption"))
         uploaded = st.file_uploader(
-            i18n.t("step1_uploader_label"), type=["docx"], label_visibility="collapsed"
+            i18n.t("step1_uploader_label"), type=["docx", "idml"], label_visibility="collapsed"
         )
 
         if not uploaded:
             st.info(i18n.t("step1_info_no_file"))
             st.stop()
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
+        is_idml = uploaded.name.lower().endswith(".idml")
+        suffix = ".idml" if is_idml else ".docx"
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
             # IMPORTANTE: usar getvalue(), NO read(). Streamlit re-ejecuta TODO
             # el script en cada interacción (toggle, edición de tabla, clic en
             # botón). El objeto 'uploaded' es el MISMO en cada re-ejecución, y
@@ -94,9 +97,36 @@ with main_col:
             # .getvalue() no mueve el puntero de lectura, así que es seguro
             # llamarlo en cada re-ejecución sin perder el contenido.
             tmp.write(uploaded.getvalue())
-            raw_path = tmp.name
+            uploaded_path = tmp.name
 
         st.success(f"✅ **{uploaded.name}** {i18n.t('step1_success')}")
+
+        if is_idml:
+            # ── Adaptador de InDesign ──────────────────────────────────────
+            # Transcribe el contenido del .idml a un .docx sintético: mismo
+            # texto, con el nombre de estilo que tenía en InDesign (creado al
+            # vuelo si no existe como estilo real de Word). A partir de aquí,
+            # el documento entra en el mismo pipeline que cualquier .docx
+            # subido directamente — sin ningún cambio en la lógica existente.
+            with st.spinner("…"):
+                idml_synthetic_path = uploaded_path.replace(".idml", "_SYNTH.docx")
+                try:
+                    from idml_handler import build_synthetic_docx
+                    n_transcribed = build_synthetic_docx(uploaded_path, idml_synthetic_path)
+                except Exception as e:
+                    st.error(f"No se pudo leer el archivo InDesign: {e}")
+                    st.stop()
+            st.caption(
+                f"🎨 Documento InDesign — {n_transcribed} párrafos transcritos a un "
+                f"DOCX intermedio antes de analizar los estilos."
+            )
+            raw_path = idml_synthetic_path
+            try:
+                os.unlink(uploaded_path)
+            except OSError:
+                pass
+        else:
+            raw_path = uploaded_path
 
         # ── Normalización de idioma ───────────────────────────────────────────
         # Word en español (u otros idiomas) traduce el NOMBRE VISIBLE de los
@@ -347,7 +377,8 @@ with main_col:
             with open(output_path, "rb") as f:
                 output_bytes = f.read()
 
-            out_name = uploaded.name.replace(".docx", "_ESTILOS_CORREGIDOS.docx")
+            base_name = uploaded.name.rsplit(".", 1)[0]
+            out_name = f"{base_name}_ESTILOS_CORREGIDOS.docx"
 
             msg = i18n.t("process_success", n=n_changes)
             if n_errors:

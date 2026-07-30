@@ -177,6 +177,68 @@ def delete_rule(rule_id):
 # ──────────────────────────────────────────────
 
 SEED_RULES = [
+    # ── Confirmadas con análisis de archivos InDesign (.idml) ──────────────
+    # Convención "legacy" numerada, confirmada con M-1917 (Light-Structure)
+    ("103 Heading 1-Rev",    "p", "Title",      0.85, "seed_confirmed"),
+    ("103.5 Heading 1",      "p", "Heading 1",  0.90, "seed_confirmed"),
+    ("104 Heading 2",        "p", "Heading 2",  0.90, "seed_confirmed"),
+    ("105 Heading 3",        "p", "Heading 3",  0.90, "seed_confirmed"),
+    ("106 Heading 4",        "p", "Heading 4",  0.85, "seed_confirmed"),
+    ("200 Body Text",        "p", "Body Text",  0.90, "seed_confirmed"),
+    ("400 Table Text",       "p", "Table Paragraph", 0.85, "seed_confirmed"),
+    ("402 Table Header Rev", "p", "Table Header",    0.85, "seed_confirmed"),
+    # Nombres propios encontrados en M-1291 (sin usar la convención numerada)
+    ("Subhead",              "p", "Heading 2",  0.70, "seed_suggested"),
+    ("Subheads P1",          "p", "Heading 2",  0.65, "seed_suggested"),
+    ("Body Copy P1",         "p", "Body Text",  0.75, "seed_suggested"),
+    ("Body",                 "p", "Body Text",  0.80, "seed_confirmed"),
+    # Catálogo "moderno" (New Paragraph Styles) — confirmado en CCMS/N8
+    ("Table Body",           "p", "Table Paragraph",   0.85, "seed_confirmed"),
+    ("Table Heading Left aligned", "p", "Table Header", 0.80, "seed_confirmed"),
+
+    # Resto de la convención numerada legacy, confirmadas con M-1917
+    ("203 Procedure",             "p", "Body Text",     0.80, "seed_confirmed"),
+    ("201.5 Checkbox",            "p", "List Paragraph", 0.80, "seed_confirmed"),
+    ("201 Bullet",                "p", "List Paragraph", 0.85, "seed_confirmed"),
+    ("201.3 Indented Bullet",     "p", "List Paragraph", 0.75, "seed_suggested"),
+    ("206 Warning Signal Word",   "p", "Body Text",     0.70, "seed_suggested"),
+    ("207 Note",                  "p", "Body Text",     0.70, "seed_suggested"),
+    ("205 Footnote",              "p", "footnote text", 0.75, "seed_confirmed"),
+    ("300 Caption",               "p", "Caption",       0.80, "seed_confirmed"),
+    ("504 Contact Info",          "p", "Body Text",     0.65, "seed_suggested"),
+    ("503 Copyright, Code, Patents", "p", "footnote text", 0.70, "seed_suggested"),
+
+    # Catálogo "moderno" (New Paragraph Styles) — resto de nombres confirmados
+    ("Figure number callout",     "p", "Caption",        0.75, "seed_confirmed"),
+    ("Table - Bullets",           "p", "Table Paragraph", 0.75, "seed_suggested"),
+    ("Table - Numbered start",    "p", "Table Paragraph", 0.75, "seed_suggested"),
+    ("Table - Numbered cont",     "p", "Table Paragraph", 0.75, "seed_suggested"),
+    ("Footer & page#",            "p", "footnote text",  0.60, "seed_suggested"),
+    ("Note-Tip-Caution-Warning",  "p", "Body Text",      0.70, "seed_suggested"),
+    ("NTWC within body list",     "p", "Body Text",      0.65, "seed_suggested"),
+    ("Body Copy - Numbered start","p", "List Paragraph", 0.75, "seed_suggested"),
+    ("Body Copy - Numbered cont", "p", "List Paragraph", 0.75, "seed_suggested"),
+    ("For Professionals",         "p", "Body Text",      0.60, "seed_suggested"),
+    ("For Recipients",            "p", "Body Text",      0.60, "seed_suggested"),
+
+    # Plantilla de brochure de casos de estudio (World Class Leaders)
+    ("Project Name",              "p", "Heading 2",      0.75, "seed_suggested"),
+    ("Project Location_2",        "p", "Body Text",      0.65, "seed_suggested"),
+    ("Project Bullet Points",     "p", "List Paragraph", 0.70, "seed_suggested"),
+
+    # Restantes confirmados en el barrido final de los 14 archivos
+    ("Body Copy -  Plain list",   "p", "List Paragraph", 0.75, "seed_confirmed"),
+    ("NTCW bullet",               "p", "List Paragraph", 0.70, "seed_suggested"),
+    ("Footnotes",                 "p", "footnote text",  0.75, "seed_confirmed"),
+    ("Figure Caption",            "p", "Caption",        0.80, "seed_confirmed"),
+    ("Blue Subhead",              "p", "Heading 2",      0.65, "seed_suggested"),
+    ("Quote new",                 "p", "Quote",          0.65, "seed_suggested"),
+    ("New Byline",                "p", "Body Text",      0.60, "seed_suggested"),
+    ("Main Head",                 "p", "Heading 1",      0.70, "seed_suggested"),
+    ("209 Half Col Tab w Dot Leader", "p", "Body Text",  0.60, "seed_suggested"),
+    ("Numbered Paragraphs",       "p", "List Paragraph", 0.70, "seed_suggested"),
+    ("Bold copy P1",              "p", "Body Text",      0.60, "seed_suggested"),
+    ("Lower Case Paragrphs",      "p", "Body Text",      0.60, "seed_suggested"),
     # ── Confirmadas con 25 pares de documentos (2,760 cambios analizados) ──
 
     # Estilos desconocidos que mapean a Heading 1

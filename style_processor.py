@@ -478,7 +478,7 @@ def analyze_document(file_path, rules_dict, known_style_names, apply_table_conte
         # ── 4. Regla guardada ─────────────────────────────────────────
         if style_name in rules_dict:
             target, rule_conf = rules_dict[style_name]
-            if target in HEADING_TARGETS:
+            if target in HEADING_TARGETS and style_name not in UNAMBIGUOUS_HEADING_STYLES:
                 likely, heur_conf, reason = is_likely_heading(para)
                 if likely:
                     results.append(_make_result(
@@ -569,6 +569,18 @@ def _make_result(idx, display, original_style,
 # inventados por nosotros). Se usan para decidir si al crear un estilo
 # ausente hay que marcarlo como builtin=True — ver _get_or_create_paragraph_style.
 GENUINE_BUILTIN_STYLE_NAMES = set(STANDARD_STYLE_ID_TO_ENGLISH_NAME.values())
+
+# Nombres de estilo DEDICADOS a heading, donde el propio nombre ya es una
+# señal fiable — a diferencia de "Default" o "Body Text" en Word (que se
+# usan tanto para títulos como para cuerpo, y necesitan la heurística de
+# negrita para desambiguar), estos nombres solo se usan para títulos.
+# Confirmado con documentos InDesign reales (convención numerada legacy).
+# La negrita en InDesign a veces vive en la DEFINICIÓN del estilo, no en
+# el texto local — por eso estos nombres se saltan la heurística de negrita.
+UNAMBIGUOUS_HEADING_STYLES = {
+    "103.5 Heading 1", "104 Heading 2", "105 Heading 3", "106 Heading 4",
+    "103 Heading 1-Rev",
+}
 
 
 def _get_or_create_paragraph_style(doc, style_name):
